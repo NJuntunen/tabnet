@@ -458,7 +458,7 @@ tabnet_train_supervised <- function(obj, x, y, config = tabnet_config(), epoch_s
       rlang::inform(message)
     
     if (early_stopping && has_valid && epoch > 1) {
-      change <- (mean(metrics[[epoch]]$valid$loss)) - mean(metrics[[epoch-1]]$valid$loss))) / mean(metrics[[epoch-1]]$valid$loss))
+      change <- (mean(metrics[[epoch]]$valid$loss) - mean(metrics[[epoch-1]]$valid$loss)) / mean(metrics[[epoch-1]]$valid$loss)
       if (change < config$delta){
         epoch_counter <- epoch_counter + 1
         if (epoch_counter >= config$patience){
