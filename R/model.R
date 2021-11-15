@@ -128,7 +128,11 @@ tabnet_config <- function(batch_size = 256,
                           pretraining_ratio = 0.5,
                           verbose = FALSE,
                           device = "auto",
-                          importance_sample_size = NULL) {
+                          importance_sample_size = NULL,
+                          early_stopping = FALSE,
+                          delta = 0.01,
+                          patience = 5L,
+                          train_shuffle = TRUE)}
 
   if (is.null(decision_width) && is.null(attention_width)) {
     decision_width <- 8 # default is 8
@@ -167,7 +171,11 @@ tabnet_config <- function(batch_size = 256,
     pretraining_ratio = pretraining_ratio,
     verbose = verbose,
     device = device,
-    importance_sample_size = importance_sample_size
+    importance_sample_size = importance_sample_size,
+    early_stopping = early_stopping,
+    delta = delta,
+    patience = patience,
+    train_shuffle = train_shuffle
   )
 }
 
@@ -353,7 +361,7 @@ tabnet_train_supervised <- function(obj, x, y, config = tabnet_config(), epoch_s
     torch::tensor_dataset(x = data$x, y = data$y),
     batch_size = config$batch_size,
     drop_last = config$drop_last,
-    shuffle = TRUE
+    shuffle = config$train_shuffle
   )
 
   # validation data
@@ -404,6 +412,8 @@ tabnet_train_supervised <- function(obj, x, y, config = tabnet_config(), epoch_s
   checkpoints <- obj$fit$checkpoints
 
   # main loop
+  epoch_counter <- 0L
+  
   for (epoch in seq_len(config$epochs)+epoch_shift) {
 
     metrics[[epoch]] <- list(train = NULL, valid = NULL)
@@ -446,6 +456,19 @@ tabnet_train_supervised <- function(obj, x, y, config = tabnet_config(), epoch_s
 
     if (config$verbose)
       rlang::inform(message)
+    
+    if (early_stopping && has_valid && epoch > 1) {
+      change <- (mean(metrics[[epoch]]$valid$loss)) - mean(metrics[[epoch-1]]$valid$loss))) / mean(metrics[[epoch-1]]$valid$loss))
+      if (change < config$delta){
+        epoch_counter <- epoch_counter + 1
+        if (epoch_counter >= config$patience){
+          break
+          }
+      }else{
+        epoch_counter <- 0L
+      }
+    }  
+      
 
     scheduler$step()
   }
