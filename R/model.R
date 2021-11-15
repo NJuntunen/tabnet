@@ -132,7 +132,7 @@ tabnet_config <- function(batch_size = 256,
                           early_stopping = FALSE,
                           delta = 0.01,
                           patience = 5L,
-                          train_shuffle = TRUE)}
+                          train_shuffle = TRUE){
 
   if (is.null(decision_width) && is.null(attention_width)) {
     decision_width <- 8 # default is 8
