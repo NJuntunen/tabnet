@@ -462,6 +462,8 @@ tabnet_train_supervised <- function(obj, x, y, config = tabnet_config(), epoch_s
       if (change < config$delta){
         epoch_counter <- epoch_counter + 1
         if (epoch_counter >= config$patience){
+          if (config$verbose)
+            rlang::inform(sprintf("Early stopping at epoch %03d", epoch))
           break
           }
       }else{
